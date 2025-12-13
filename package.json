@@ -17,7 +17,9 @@
     "build:worker": "npm run build",
     "deploy:worker": "wrangler deploy",
     "deploy:pages": "npm run build && wrangler pages deploy dist",
-    "cf:setup": "npm install -g wrangler && wrangler login"
+    "cf:setup": "npm install -g wrangler && wrangler login",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "lucide-react": "^0.556.0",
