@@ -2,7 +2,9 @@ import { ServerConfig } from '../../types.ts';
 
 // Use environment variable for API URL, fallback to localhost for development
 const API_BASE_URL = import.meta.env.VITE_API_URL || (
-  import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3001/api'
+  import.meta.env.MODE === 'production' 
+    ? 'https://pimx-backend.onrender.com/api' 
+    : 'http://localhost:3001/api'
 );
 
 export const apiService = {
