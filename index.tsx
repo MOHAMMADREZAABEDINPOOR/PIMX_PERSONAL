@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './src/App';
+import './src/clean-styles.css';
+import './src/modern-styles.css';
+import './src/responsive.css';
+import './src/animations.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
