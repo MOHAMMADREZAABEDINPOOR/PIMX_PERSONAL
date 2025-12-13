@@ -1,7 +1,9 @@
 import { ServerConfig } from '../../types.ts';
 
 // Use environment variable for API URL, fallback to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3001/api'
+);
 
 export const apiService = {
   // دریافت سرورهای فعال

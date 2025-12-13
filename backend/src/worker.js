@@ -1,7 +1,5 @@
 // Cloudflare Worker version of the backend
-import { Router } from 'itty-router';
-
-const router = Router();
+// Simple router without external dependencies
 
 // CORS headers
 const corsHeaders = {
@@ -10,100 +8,105 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-// Handle CORS preflight requests
-router.options('*', () => new Response(null, { headers: corsHeaders }));
-
-// Get servers endpoint
-router.get('/api/servers', async (request, env) => {
-  try {
-    // Get servers from KV storage
-    const serversData = await env.SERVERS_DB.get('active_servers');
-    const servers = serversData ? JSON.parse(serversData) : [];
-    
+// Simple request handler
+async function handleRequest(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+  
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
+  // Get servers endpoint
+  if (path === '/api/servers' && request.method === 'GET') {
+    try {
+      // Get servers from KV storage
+      const serversData = await env.SERVERS_KV.get('active_servers');
+      const servers = serversData ? JSON.parse(serversData) : [];
+      
+      return new Response(JSON.stringify(servers.slice(0, 150)), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
+  // Get stats endpoint
+  if (path === '/api/stats' && request.method === 'GET') {
+    try {
+      const serversData = await env.SERVERS_KV.get('active_servers');
+      const servers = serversData ? JSON.parse(serversData) : [];
+      const lastScan = await env.SERVERS_KV.get('last_scan') || new Date().toISOString();
+      
+      return new Response(JSON.stringify({
+        totalServers: servers.length,
+        activeServers: servers.filter(s => s && s.status === 'active').length,
+        lastScan: lastScan,
+        nextScan: new Date(Date.now() + 3600000).toISOString()
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
+  // Dislike server endpoint
+  if (path.includes('/api/servers/') && path.endsWith('/dislike') && request.method === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const id = pathParts[3];
+      
+      // Get current dislikes
+      const dislikesData = await env.SERVERS_KV.get('server_dislikes');
+      const dislikes = dislikesData ? JSON.parse(dislikesData) : {};
+      
+      dislikes[id] = (dislikes[id] || 0) + 1;
+      await env.SERVERS_KV.put('server_dislikes', JSON.stringify(dislikes));
+      
+      return new Response(JSON.stringify({
+        success: true,
+        dislikes: dislikes[id]
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
+  // Health check
+  if (path === '/api/health' && request.method === 'GET') {
     return new Response(JSON.stringify({
-      success: true,
-      servers: servers.slice(0, 150) // Limit to 150 servers
+      status: 'healthy',
+      timestamp: new Date().toISOString()
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message
-    }), {
-      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-});
-
-// Get stats endpoint
-router.get('/api/stats', async (request, env) => {
-  try {
-    const serversData = await env.SERVERS_DB.get('active_servers');
-    const servers = serversData ? JSON.parse(serversData) : [];
-    const lastScan = await env.SERVERS_DB.get('last_scan') || new Date().toISOString();
-    
-    return new Response(JSON.stringify({
-      totalServers: servers.length,
-      activeServers: servers.filter(s => s.status === 'active').length,
-      lastScan: lastScan,
-      nextScan: new Date(Date.now() + 3600000).toISOString()
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-});
-
-// Dislike server endpoint
-router.post('/api/servers/:id/dislike', async (request, env) => {
-  try {
-    const { id } = request.params;
-    const dislikesData = await env.SERVERS_DB.get('server_dislikes');
-    const dislikes = dislikesData ? JSON.parse(dislikesData) : {};
-    
-    dislikes[id] = (dislikes[id] || 0) + 1;
-    await env.SERVERS_DB.put('server_dislikes', JSON.stringify(dislikes));
-    
-    return new Response(JSON.stringify({
-      success: true,
-      dislikes: dislikes[id]
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-});
-
-// Health check
-router.get('/api/health', () => {
-  return new Response(JSON.stringify({
-    status: 'healthy',
-    timestamp: new Date().toISOString()
-  }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  
+  // Default response
+  return new Response('Not Found', { 
+    status: 404, 
+    headers: corsHeaders 
   });
-});
+}
 
 // Handle all requests
 export default {
   async fetch(request, env, ctx) {
-    return router.handle(request, env, ctx);
+    return handleRequest(request, env);
   },
 
   // Scheduled event for scanning (runs every hour)

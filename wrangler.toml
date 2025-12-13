@@ -8,9 +8,6 @@ MIN_SERVERS = "100"
 MAX_SERVERS = "150"
 
 [[kv_namespaces]]
-binding = "SERVERS_DB"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
-
-[build]
-command = "npm run build:worker"
+binding = "SERVERS_KV"
+id = ""
+preview_id = ""

@@ -1,17 +1,16 @@
-// Cloudflare Worker to handle API requests
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    
-    // Handle API routes
-    if (url.pathname.startsWith('/api/')) {
-      return handleAPI(request, env);
-    }
-    
-    // Serve static files for other routes
-    return env.ASSETS.fetch(request);
+// Cloudflare Pages Function to handle API requests
+export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  
+  // Handle API routes
+  if (url.pathname.startsWith('/api/')) {
+    return handleAPI(request, env);
   }
-};
+  
+  // Let Pages handle static files
+  return new Response('Not Found', { status: 404 });
+}
 
 async function handleAPI(request, env) {
   const url = new URL(request.url);
