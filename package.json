@@ -5,12 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cd backend && npm install",
     "preview": "vite preview",
     "backend": "cd backend && npm run dev",
-    "start": "concurrently \"npm run backend\" \"npm run dev\"",
+    "backend:prod": "cd backend && npm start",
+    "start": "concurrently \"npm run backend:prod\" \"npm run serve\"",
+    "serve": "serve -s dist -l 8000",
     "setup": "npm install && cd backend && npm install",
-    "test-api": "curl http://localhost:3001/api/stats"
+    "build-and-start": "npm run build && npm start",
+    "test-api": "curl http://localhost:3001/api/stats",
+    "build:worker": "npm run build",
+    "deploy:worker": "wrangler deploy",
+    "deploy:pages": "npm run build && wrangler pages deploy dist",
+    "cf:setup": "npm install -g wrangler && wrangler login"
   },
   "dependencies": {
     "lucide-react": "^0.556.0",
@@ -22,6 +29,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^8.2.2",
+    "serve": "^14.2.5",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
