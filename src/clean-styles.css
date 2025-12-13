@@ -1,0 +1,366 @@
+/* استایل‌های تمیز و مدرن برای PIMXPASS */
+
+/* حذف تمام پس‌زمینه‌های اضافی */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: none !important;
+  background-image: none !important;
+}
+
+/* حذف تمام گرادیانت‌ها و افکت‌های اضافی */
+.no-background {
+  background: none !important;
+  background-image: none !important;
+}
+
+/* انیمیشن‌های ساده */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* تنظیمات اسکرول */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* ریسپانسیو برای گوشی‌های کوچک */
+@media (max-width: 400px) {
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+  
+  .mobile-p-4 {
+    padding: 1rem !important;
+  }
+  
+  .mobile-gap-4 {
+    gap: 1rem !important;
+  }
+  
+  .mobile-grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* حذف تمام افکت‌های فانتزی */
+.no-effects {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* تنظیمات تم تاریک */
+.dark-theme {
+  background-color: #0f172a !important; /* slate-900 */
+  color: #ffffff !important;
+}
+
+.light-theme {
+  background-color: #f9fafb !important; /* gray-50 */
+  color: #111827 !important; /* gray-900 */
+}
+
+/* حذف تمام گرادیانت‌ها */
+.no-gradient {
+  background: solid !important;
+}
+
+/* کارت‌های ساده */
+.simple-card {
+  border-radius: 0.75rem;
+  border: 1px solid;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.simple-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dark .simple-card {
+  background-color: #1e293b; /* slate-800 */
+  border-color: #334155; /* slate-700 */
+}
+
+.light .simple-card {
+  background-color: #ffffff;
+  border-color: #e5e7eb; /* gray-200 */
+}
+
+/* دکمه‌های ساده */
+.simple-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.simple-button:hover {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  background-color: #06b6d4; /* cyan-500 */
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: #0891b2; /* cyan-600 */
+}
+
+/* حذف تمام انیمیشن‌های پیچیده */
+.no-complex-animations * {
+  animation: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* تنظیمات فونت */
+.clean-text {
+  font-family: 'Vazirmatn', sans-serif;
+  line-height: 1.5;
+}
+
+/* حذف تمام افکت‌های blur */
+.no-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+
+/* تنظیمات ساده برای header */
+.clean-header {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .clean-header {
+  background-color: rgba(15, 23, 42, 0.95);
+  border-bottom-color: #334155;
+}
+
+/* حذف تمام سایه‌های پیچیده */
+.simple-shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.simple-shadow-lg {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* تنظیمات ساده برای modal */
+.clean-modal {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.clean-modal-content {
+  background-color: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+
+.dark .clean-modal-content {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+/* حذف تمام گرادیانت‌های متنی */
+.simple-text {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+}
+
+/* تنظیمات ساده برای بج‌ها */
+.simple-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-cyan {
+  background-color: rgba(6, 182, 212, 0.1);
+  color: #0891b2;
+}
+
+.badge-blue {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.badge-green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+/* حذف تمام transform های پیچیده */
+.no-transform {
+  transform: none !important;
+}
+
+.simple-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* تنظیمات ساده برای grid */
+.simple-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* حذف تمام افکت‌های نوری */
+.no-glow {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* تنظیمات ساده برای loading */
+.simple-loading {
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #06b6d4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* حذف تمام پس‌زمینه‌های متحرک */
+.static-background {
+  background-attachment: scroll !important;
+  background-size: auto !important;
+  background-position: 0 0 !important;
+}
+
+/* تنظیمات ساده برای فرم‌ها */
+.simple-input {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.simple-input:focus {
+  outline: none;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+}
+
+.dark .simple-input {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: white;
+}
+
+/* حذف تمام انیمیشن‌های پس‌زمینه */
+.no-bg-animation {
+  background-image: none !important;
+  animation: none !important;
+}
+
+/* تنظیمات ساده برای نوتیفیکیشن */
+.simple-notification {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  margin-bottom: 1rem;
+}
+
+.notification-success {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.notification-error {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.dark .notification-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.dark .notification-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}

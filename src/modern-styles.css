@@ -1,0 +1,466 @@
+/* استایل‌های مدرن برای PIMXPASS */
+
+/* تنظیمات کلی */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* انیمیشن‌های ساده */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* کلاس‌های انیمیشن */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* تنظیمات اسکرول */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* گرادیانت‌های مدرن */
+.gradient-blue-cyan {
+  background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+}
+
+.gradient-cyan-teal {
+  background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+}
+
+.gradient-blue-purple {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
+/* سایه‌های مدرن */
+.shadow-modern {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-modern-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-modern-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Dark mode shadows */
+.dark .shadow-modern {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .shadow-modern-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+.dark .shadow-modern-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* بوردرهای مدرن */
+.border-modern {
+  border: 1px solid #e2e8f0;
+}
+
+.dark .border-modern {
+  border-color: #334155;
+}
+
+/* پس‌زمینه‌های شیشه‌ای */
+.glass {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.glass-light {
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* دکمه‌های مدرن */
+.btn-modern {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+}
+
+.btn-primary {
+  @apply bg-cyan-500 hover:bg-cyan-600 text-white;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 text-gray-900;
+}
+
+.dark .btn-secondary {
+  @apply bg-gray-700 hover:bg-gray-600 text-white;
+}
+
+.btn-outline {
+  @apply border border-gray-300 hover:bg-gray-50 text-gray-700;
+}
+
+.dark .btn-outline {
+  @apply border-gray-600 hover:bg-gray-800 text-gray-300;
+}
+
+/* کارت‌های مدرن */
+.card-modern {
+  @apply rounded-xl border bg-white;
+}
+
+.dark .card-modern {
+  @apply bg-slate-800 border-slate-700;
+}
+
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-lg;
+}
+
+.dark .card-hover:hover {
+  @apply shadow-xl;
+}
+
+/* متن‌های مدرن */
+.text-primary {
+  @apply text-gray-900;
+}
+
+.dark .text-primary {
+  @apply text-white;
+}
+
+.text-secondary {
+  @apply text-gray-600;
+}
+
+.dark .text-secondary {
+  @apply text-gray-400;
+}
+
+.text-muted {
+  @apply text-gray-500;
+}
+
+.dark .text-muted {
+  @apply text-gray-500;
+}
+
+/* بج‌های مدرن */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-cyan-100 text-cyan-800;
+}
+
+.dark .badge-primary {
+  @apply bg-cyan-900/50 text-cyan-300;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.dark .badge-success {
+  @apply bg-green-900/50 text-green-300;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.dark .badge-warning {
+  @apply bg-yellow-900/50 text-yellow-300;
+}
+
+.badge-error {
+  @apply bg-red-100 text-red-800;
+}
+
+.dark .badge-error {
+  @apply bg-red-900/50 text-red-300;
+}
+
+/* فرم‌های مدرن */
+.input-modern {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent;
+}
+
+.dark .input-modern {
+  @apply bg-slate-800 border-slate-600 text-white;
+}
+
+/* لودینگ مدرن */
+.loading-spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-cyan-500;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0%, 20% {
+    content: '';
+  }
+  40% {
+    content: '.';
+  }
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
+}
+
+/* ریسپانسیو */
+@media (max-width: 640px) {
+  .mobile-stack {
+    @apply flex-col space-y-2 space-x-0;
+  }
+  
+  .mobile-full {
+    @apply w-full;
+  }
+  
+  .mobile-text-sm {
+    @apply text-sm;
+  }
+  
+  .mobile-p-4 {
+    @apply p-4;
+  }
+}
+
+/* حالت تاریک */
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    @apply bg-slate-900 text-white;
+  }
+}
+
+/* انیمیشن‌های تعاملی */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+.hover-scale {
+  @apply transition-transform duration-200 hover:scale-105;
+}
+
+.hover-glow {
+  @apply transition-shadow duration-200;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+.dark .hover-glow:hover {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+}
+
+/* فوکوس مدرن */
+.focus-modern {
+  @apply focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2;
+}
+
+.dark .focus-modern {
+  @apply focus:ring-offset-slate-900;
+}
+
+/* ترانزیشن‌های نرم */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.transition-fast {
+  @apply transition-all duration-150 ease-out;
+}
+
+/* گرید مدرن */
+.grid-modern {
+  @apply grid gap-6;
+}
+
+.grid-responsive {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+/* فلکس مدرن */
+.flex-modern {
+  @apply flex items-center justify-between;
+}
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+/* اسپیسینگ مدرن */
+.space-modern > * + * {
+  @apply mt-6;
+}
+
+.space-modern-sm > * + * {
+  @apply mt-4;
+}
+
+/* کانتینر مدرن */
+.container-modern {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* سکشن مدرن */
+.section-modern {
+  @apply py-12 sm:py-16 lg:py-20;
+}
+
+/* تایپوگرافی مدرن */
+.heading-1 {
+  @apply text-3xl sm:text-4xl lg:text-5xl font-bold;
+}
+
+.heading-2 {
+  @apply text-2xl sm:text-3xl lg:text-4xl font-bold;
+}
+
+.heading-3 {
+  @apply text-xl sm:text-2xl lg:text-3xl font-semibold;
+}
+
+.body-large {
+  @apply text-lg sm:text-xl;
+}
+
+.body-normal {
+  @apply text-base;
+}
+
+.body-small {
+  @apply text-sm;
+}
+
+/* رنگ‌های مدرن */
+.text-brand {
+  @apply text-cyan-600;
+}
+
+.dark .text-brand {
+  @apply text-cyan-400;
+}
+
+.bg-brand {
+  @apply bg-cyan-500;
+}
+
+.border-brand {
+  @apply border-cyan-500;
+}
+
+/* استیت‌های مدرن */
+.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.loading {
+  @apply opacity-75 cursor-wait;
+}
+
+.success {
+  @apply text-green-600 bg-green-50 border-green-200;
+}
+
+.dark .success {
+  @apply text-green-400 bg-green-900/20 border-green-800;
+}
+
+.error {
+  @apply text-red-600 bg-red-50 border-red-200;
+}
+
+.dark .error {
+  @apply text-red-400 bg-red-900/20 border-red-800;
+}
+
+.warning {
+  @apply text-yellow-600 bg-yellow-50 border-yellow-200;
+}
+
+.dark .warning {
+  @apply text-yellow-400 bg-yellow-900/20 border-yellow-800;
+}
+
+.info {
+  @apply text-blue-600 bg-blue-50 border-blue-200;
+}
+
+.dark .info {
+  @apply text-blue-400 bg-blue-900/20 border-blue-800;
+}

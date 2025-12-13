@@ -1,0 +1,5 @@
+{
+  "name": "V2Ray Speed Sentinel",
+  "description": "A high-performance dashboard to parse, analyze, and benchmark V2Ray server configurations from GitHub sources, featuring real-time latency visualization and filtering.",
+  "requestFramePermissions": []
+}
