@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerConfig } from '../types.ts';
+import { ServerConfig } from '../types';
 import { Copy, Check, Zap, ThumbsDown, Shield } from 'lucide-react';
 
 interface ServerCardProps {

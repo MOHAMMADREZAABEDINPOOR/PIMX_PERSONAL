@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ServerCard } from '../components/ServerCard';
 import { apiService } from './services/api';
-import { ServerConfig } from '../types.ts';
+import { ServerConfig } from '../types';
 import { Shield, RefreshCw, Copy, Wifi, Zap, Clock, Sun, Moon, HelpCircle, X, ChevronDown, Monitor, TrendingUp } from 'lucide-react';
-import './animations.css';
-import './responsive.css';
-import './modern-styles.css';
-import './clean-styles.css';
-import './mobile-enhancements.css';
 
 // اضافه کردن انیمیشن چرخش
 const spinKeyframes = `
