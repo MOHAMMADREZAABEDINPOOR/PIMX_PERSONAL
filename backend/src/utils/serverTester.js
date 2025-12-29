@@ -686,9 +686,7 @@ export const testServersBatch = async (
     const uniqueServers = servers.filter((server, index, arr) => 
         index === arr.findIndex(s => s.originalString === server.originalString)
     );
-
-    const cores = 8; // تعداد هسته پردازنده در Node.js
-    const batchSize = Math.min(90, Math.max(30, cores * 6));
+    const batchSize = 10;
     
     let processedCount = 0;
     let activeCount = 0;

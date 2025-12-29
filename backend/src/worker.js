@@ -85,6 +85,37 @@ async function handleRequest(request, env) {
       });
     }
   }
+
+  // Undislike server endpoint
+  if (path.includes('/api/servers/') && path.endsWith('/undislike') && request.method === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const id = pathParts[3];
+
+      const dislikesData = await env.SERVERS_KV.get('server_dislikes');
+      const dislikes = dislikesData ? JSON.parse(dislikesData) : {};
+
+      if (dislikes[id]) {
+        dislikes[id] = Math.max(dislikes[id] - 1, 0);
+        if (dislikes[id] === 0) {
+          delete dislikes[id];
+        }
+        await env.SERVERS_KV.put('server_dislikes', JSON.stringify(dislikes));
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        dislikes: dislikes[id] || 0
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  }
   
   // Health check
   if (path === '/api/health' && request.method === 'GET') {

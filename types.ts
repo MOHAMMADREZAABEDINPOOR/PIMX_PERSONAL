@@ -52,6 +52,7 @@ export interface Stats {
   total_active: number;
   total_selected: number;
   total_dislikes: number;
+  dislikes_since_scan?: number;
   last_scan?: string;
   scan_completed_at?: string;
   next_scan_at?: string;

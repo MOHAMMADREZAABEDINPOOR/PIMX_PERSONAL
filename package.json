@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "backend": "cd backend && npm run dev",
     "backend:prod": "cd backend && npm start",
-    "start": "concurrently \"npm run backend:prod\" \"npm run serve\"",
+    "start": "npm run build && concurrently \"npm run backend:prod\" \"npm run serve\"",
     "serve": "serve -s dist -l 8000",
     "setup": "npm install && cd backend && npm install",
     "build-and-start": "npm run build && npm start",

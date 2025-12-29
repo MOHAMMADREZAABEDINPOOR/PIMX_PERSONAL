@@ -5,6 +5,7 @@ import './src/clean-styles.css';
 import './src/modern-styles.css';
 import './src/responsive.css';
 import './src/animations.css';
+import './src/tech-theme.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

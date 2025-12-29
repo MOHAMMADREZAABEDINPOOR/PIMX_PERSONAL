@@ -1,10 +1,11 @@
+import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
 import dotenv from 'dotenv';
 import { initDatabase } from './database.js';
 import { scanServers, getScanStatus } from './scanner.js';
-import { getActiveServers, getStats, updateServerStats } from './services/serverService.js';
+import { getActiveServers, getStats, recordDislike, removeDislike } from './services/serverService.js';
 // فایل‌های مربوط به سیستم‌های قدیمی حذف شدند
 
 dotenv.config();
@@ -13,6 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Middleware
+app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
 
@@ -43,8 +45,22 @@ app.get('/api/stats', async (req, res) => {
 app.post('/api/servers/:id/dislike', async (req, res) => {
   try {
     const { id } = req.params;
-    await updateServerStats(id, 'dislike');
-    res.json({ success: true });
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ip = Array.isArray(forwardedFor)
+      ? forwardedFor[0]
+      : (forwardedFor || req.ip || '').split(',')[0].trim();
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const userKey = crypto
+      .createHash('sha256')
+      .update(`${ip}|${userAgent}`)
+      .digest('hex');
+
+    const result = await recordDislike(id, userKey);
+
+    if (result.dislikesSinceScan >= 1000 && !getScanStatus().isScanning) {
+      scanServers().catch(console.error);
+    }
+    res.json({ success: true, added: result.added });
   } catch (error) {
     console.error('خطا در ثبت دیسلایک:', error);
     res.status(500).json({ error: 'خطا در ثبت دیسلایک' });
@@ -52,6 +68,27 @@ app.post('/api/servers/:id/dislike', async (req, res) => {
 });
 
 // وضعیت اسکن
+app.post('/api/servers/:id/undislike', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ip = Array.isArray(forwardedFor)
+      ? forwardedFor[0]
+      : (forwardedFor || req.ip || '').split(',')[0].trim();
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const userKey = crypto
+      .createHash('sha256')
+      .update(`${ip}|${userAgent}`)
+      .digest('hex');
+
+    const result = await removeDislike(id, userKey);
+    res.json({ success: true, removed: result.removed });
+  } catch (error) {
+    console.error('خطا در حذف دیسلایک:', error);
+    res.status(500).json({ error: 'خطا در حذف دیسلایک' });
+  }
+});
+
 app.get('/api/scan-status', async (req, res) => {
   try {
     const scanStatus = getScanStatus();

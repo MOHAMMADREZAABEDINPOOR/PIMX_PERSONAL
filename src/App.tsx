@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ServerCard } from '../components/ServerCard';
 import { apiService } from './services/api';
 import { ServerConfig } from '../types';
 import { Shield, RefreshCw, Copy, Wifi, Zap, Clock, Sun, Moon, HelpCircle, X, ChevronDown, Monitor, TrendingUp } from 'lucide-react';
 
-// اضافه کردن انیمیشن چرخش
+// Add spinner animation
 const spinKeyframes = `
   @keyframes spin {
     from { transform: rotate(0deg); }
@@ -12,7 +12,7 @@ const spinKeyframes = `
   }
 `;
 
-// اضافه کردن استایل به head
+// Inject spinner style in head
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = spinKeyframes;
@@ -26,47 +26,47 @@ const App = () => {
   const [copyAllDone, setCopyAllDone] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [scanStatus, setScanStatus] = useState<any>(null);
-  // سیستم تم پیشرفته
+  // Theme state
   const [themeMode, setThemeMode] = useState(() => {
     const savedTheme = localStorage.getItem('themeMode');
-    return savedTheme || 'dark'; // پیش‌فرض: تم تاریک
+    return savedTheme || 'dark';
   });
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [nextScanCountdown, setNextScanCountdown] = useState(0);
 
 
-  // محاسبه تم فعلی بر اساس حالت انتخابی
+  // Resolve theme
   const isDarkMode = (() => {
     if (themeMode === 'system') {
       const hour = new Date().getHours();
-      return hour < 6 || hour >= 18; // شب: 6 شب تا 6 صبح
+      return hour < 6 || hour >= 18;
     }
     return themeMode === 'dark';
   })();
 
-  // ذخیره حالت تم در localStorage هنگام تغییر
+  // Persist theme
   useEffect(() => {
     localStorage.setItem('themeMode', themeMode);
   }, [themeMode]);
 
-  // بروزرسانی تم سیستم هر دقیقه (فقط در حالت system)
+  // Update theme on system changes
   useEffect(() => {
     if (themeMode === 'system') {
       const interval = setInterval(() => {
-        // فورس کردن re-render برای بررسی ساعت
+        // Force re-render for theme refresh
         setThemeMode('system');
-      }, 60000); // هر دقیقه چک کن
+      }, 60000);
       
       return () => clearInterval(interval);
     }
   }, [themeMode]);
 
-  // بستن dropdown وقتی کاربر جای دیگه کلیک کنه
+  // Close theme dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      // چک کن که کلیک خارج از dropdown باشه
+      // Check click outside dropdown
       if (showThemeDropdown && !target.closest('.theme-dropdown')) {
         setShowThemeDropdown(false);
       }
@@ -81,7 +81,7 @@ const App = () => {
     };
   }, [showThemeDropdown]);
 
-  // شمارش معکوس برای اسکن بعدی
+  // Countdown for next scan
   useEffect(() => {
     if (nextScanCountdown > 0) {
       const timer = setInterval(() => {
@@ -95,11 +95,11 @@ const App = () => {
     }
   }, [nextScanCountdown]);
 
-  // بارگذاری اولیه داده‌ها
+  // Initial data load
   useEffect(() => {
     loadData();
     
-    // رفرش خودکار - اگر اسکن در حال انجامه هر 5 ثانیه، وگرنه هر 60 ثانیه
+    // Auto refresh cadence based on scan state
     const getInterval = () => scanStatus?.isScanning ? 5000 : 60000;
     
     const interval = setInterval(() => {
@@ -121,13 +121,13 @@ const App = () => {
       setStats(statsData);
       setScanStatus(scanStatusData);
       
-      // اگر اسکن تمام شده، شمارش معکوس رو از سرور بگیر
+      // Set countdown when scan completed
       if (scanStatusData && !scanStatusData.isScanning && scanStatusData.secondsUntilNextScan !== undefined) {
         setNextScanCountdown(scanStatusData.secondsUntilNextScan);
       }
       
     } catch (error) {
-      console.error('خطا در بارگذاری داده‌ها:', error);
+      console.error('خطا در بارگذاری داده ها:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -139,9 +139,36 @@ const App = () => {
     loadData();
   };
 
+  const brandName = 'PIMXPASS';
+
+  const sanitizeConfigString = (config: string) => {
+    if (!config) return config;
+    const hashIndex = config.indexOf('#');
+    if (hashIndex === -1) {
+      return config;
+    }
+    const prefix = config.slice(0, hashIndex + 1);
+    const fragment = config.slice(hashIndex + 1).trim();
+    const flagMatch = fragment.match(/^([\u{1F1E6}-\u{1F1FF}]{2})/u);
+    const flag = flagMatch ? `${flagMatch[1]} ` : '';
+    return `${prefix}${flag}${brandName}`;
+  };
+
+  const getDisplayName = (server: ServerConfig) => {
+    const config = server.originalString || server.config_string || '';
+    const hashIndex = config.indexOf('#');
+    if (hashIndex === -1) {
+      return brandName;
+    }
+    const fragment = config.slice(hashIndex + 1).trim();
+    const flagMatch = fragment.match(/^([\u{1F1E6}-\u{1F1FF}]{2})/u);
+    const flag = flagMatch ? `${flagMatch[1]} ` : '';
+    return `${flag}${brandName}`;
+  };
+
   const handleCopyAll = () => {
-    const validServers = servers.filter(s => s.originalString && s.originalString.trim().length > 0);
-    const text = validServers.map(s => s.originalString).join('\n');
+    const validServers = displayServers.filter(s => (s.originalString || s.config_string) && (s.originalString || s.config_string).trim().length > 0);
+    const text = validServers.map(s => sanitizeConfigString(s.originalString || s.config_string)).join('\n');
     
     if (text) {
       navigator.clipboard.writeText(text);
@@ -159,15 +186,24 @@ const App = () => {
     }
   };
 
+  const handleUndislike = async (server: ServerConfig) => {
+    try {
+      await apiService.undislikeServer(server.id);
+      console.log('دیسلایک برداشته شد:', server.ps);
+    } catch (error) {
+      console.error('خطا در حذف دیسلایک:', error);
+    }
+  };
 
 
-  // تابع تغییر تم
+
+  // Theme change handler
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setThemeMode(newTheme);
     setShowThemeDropdown(false);
   };
 
-  // آیکون و متن برای هر حالت تم
+  // Theme label/icon helpers
   const getThemeIcon = (theme: string) => {
     switch (theme) {
       case 'light': return <Sun size={20} />;
@@ -179,14 +215,14 @@ const App = () => {
 
   const getThemeLabel = (theme: string) => {
     switch (theme) {
-      case 'light': return '☀️ روشن';
-      case 'dark': return '🌙 تاریک';
-      case 'system': return '🖥️ سیستم';
-      default: return '🌙 تاریک';
+      case 'light': return 'روشن';
+      case 'dark': return 'تاریک';
+      case 'system': return 'سیستم';
+      default: return 'تاریک';
     }
   };
 
-  // فرمت کردن زمان شمارش معکوس
+  // Format countdown
   const formatCountdown = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -196,11 +232,17 @@ const App = () => {
 
 
 
-  // آمار محاسبه شده
-  const activeCount = servers.length;
-  const avgLatency = activeCount > 0 
-    ? Math.round(servers.reduce((acc, curr) => acc + curr.latency, 0) / activeCount) 
+  // Stats
+  const isScanning = !!scanStatus?.isScanning;
+  const filteredServers = servers.filter((server) =>
+    server.status === 'active' && (server.latency ?? 999) < 250
+  );
+  const displayServers = filteredServers;
+  const activeCount = displayServers.length;
+  const avgLatency = displayServers.length > 0
+    ? Math.round(displayServers.reduce((acc, curr) => acc + curr.latency, 0) / displayServers.length)
     : 0;
+  const canCopy = activeCount > 0;
 
   if (loading && servers.length === 0) {
     return (
@@ -210,7 +252,7 @@ const App = () => {
           : 'bg-gray-50'
       }`}>
         <div className="text-center max-w-sm sm:max-w-md mx-auto px-4 relative z-10">
-          {/* انیمیشن لودینگ مدرن */}
+          {/* Loading animation */}
           <div className="relative mb-8">
             <div className="w-20 h-20 mx-auto relative">
               <div className="absolute inset-0 border-4 border-cyan-200 rounded-full"></div>
@@ -221,14 +263,14 @@ const App = () => {
             </div>
           </div>
 
-          {/* متن اصلی */}
+          {/* Main text */}
           <h2 className={`text-2xl font-semibold mb-4 ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            در حال اسکن سرورها
+            در حال دریافت وضعیت اسکن
           </h2>
           
-          {/* پیام وضعیت */}
+          {/* Status message */}
           {scanStatus?.message && (
             <p className={`text-base mb-6 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-600'
@@ -239,7 +281,7 @@ const App = () => {
 
 
           
-          {/* آمار لحظه‌ای */}
+          {/* Live stats */}
           {scanStatus?.isScanning && (
             <div className={`rounded-xl p-6 mb-8 border ${
               isDarkMode 
@@ -281,12 +323,12 @@ const App = () => {
             </div>
           )}
 
-          {/* توضیحات */}
+          {/* Details */}
           <div className={`text-base mb-6 ${
             isDarkMode ? 'text-gray-400' : 'text-gray-600'
           }`}>
-            <p className="mb-2">در حال جستجوی سرورهای فعال...</p>
-            <p>سرورها به محض یافتن نمایش داده می‌شوند</p>
+            <p className="mb-2">در حال بررسی وضعیت سرورها و به روزرسانی داده ها...</p>
+            <p>در پایان اسکن، سرورهای فعال با بهترین کیفیت نمایش داده می شوند.</p>
           </div>
         </div>
       </div>
@@ -294,50 +336,30 @@ const App = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-pattern-none no-lines no-gradient ${
-      isDarkMode 
-        ? 'bg-slate-900 text-white dark-mode-bg' 
-        : 'bg-gray-50 text-gray-900 light-mode-bg'
-    }`} style={{ 
-      backgroundImage: 'none !important',
-      backgroundColor: isDarkMode ? '#0f172a !important' : '#f9fafb !important',
-      position: 'relative'
-    }}>
+    <div className={`${isDarkMode ? 'theme-dark' : 'theme-light'} tech-shell`}>
       
 
       
-      {/* Header مدرن */}
-      <header className={`sticky top-0 z-50 border-b backdrop-blur-sm ${
-        isDarkMode 
-          ? 'bg-slate-900/95 border-slate-800' 
-          : 'bg-white/95 border-gray-200'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-lg ${
-              isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'
-            }`}>
-              <Shield className="text-cyan-500" size={24} />
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 tech-header">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between tech-layer">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl tech-icon">
+              <Shield size={24} />
             </div>
             <a 
               href="https://t.me/PIMX_PASS" 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`text-xl font-bold ${
-                isDarkMode ? 'text-white hover:text-cyan-400' : 'text-gray-900 hover:text-cyan-600'
-              } transition-colors`}
+              className="text-xl font-bold tech-title tech-link"
             >
               PIMXPASS
             </a>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowHelpModal(true)}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'hover:bg-slate-800 text-gray-400 hover:text-white' 
-                  : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-              }`}
+              className="p-2 rounded-lg tech-button-ghost"
               title="راهنما"
             >
               <HelpCircle size={20} />
@@ -347,12 +369,8 @@ const App = () => {
             <div className="relative theme-dropdown">
               <button
                 onClick={() => setShowThemeDropdown(!showThemeDropdown)}
-                className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'hover:bg-slate-800 text-gray-400 hover:text-white' 
-                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-                }`}
-                title="تغییر تم"
+                className="flex items-center gap-2 p-2 rounded-lg tech-button-ghost"
+                title="تغییر پوسته"
               >
                 {getThemeIcon(themeMode)}
                 <ChevronDown size={16} className={`transition-transform ${showThemeDropdown ? 'rotate-180' : ''}`} />
@@ -360,27 +378,19 @@ const App = () => {
 
               {/* Dropdown Menu */}
               {showThemeDropdown && (
-                <div className={`absolute top-full right-0 mt-2 w-48 rounded-lg border shadow-lg z-50 ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-slate-700' 
-                    : 'bg-white border-gray-200'
-                }`}>
+                <div className="absolute top-full right-0 mt-2 w-48 rounded-lg shadow-lg z-50 tech-panel">
                   {['light', 'dark', 'system'].map((theme) => (
                     <button
                       key={theme}
                       onClick={() => handleThemeChange(theme as 'light' | 'dark' | 'system')}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-right transition-colors ${
-                        themeMode === theme
-                          ? isDarkMode 
-                            ? 'bg-cyan-500/10 text-cyan-400' 
-                            : 'bg-cyan-50 text-cyan-600'
-                          : isDarkMode 
-                            ? 'hover:bg-slate-700 text-gray-300' 
-                            : 'hover:bg-gray-50 text-gray-700'
-                      } ${
                         theme === 'light' ? 'rounded-t-lg' : 
                         theme === 'system' ? 'rounded-b-lg' : ''
                       }`}
+                      style={{
+                        background: themeMode === theme ? 'rgba(45, 251, 209, 0.12)' : 'transparent',
+                        color: themeMode === theme ? 'var(--accent)' : 'var(--text-muted)'
+                      }}
                       dir="rtl"
                     >
                       <span>{getThemeIcon(theme)}</span>
@@ -394,11 +404,14 @@ const App = () => {
               )}
             </div>
             
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-              isDarkMode 
-                ? 'bg-green-500/10 text-green-400' 
-                : 'bg-green-50 text-green-600'
-            }`}>
+            <div
+              className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
+              style={{
+                background: 'rgba(34, 197, 94, 0.12)',
+                color: '#22c55e',
+                border: '1px solid rgba(34, 197, 94, 0.2)'
+              }}
+            >
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
               <span className="hidden sm:inline">آنلاین</span>
             </div>
@@ -406,149 +419,105 @@ const App = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 pb-8 pt-24 space-y-8 tech-layer">
         
-        {/* نوار پیشرفت اسکن - فقط وقتی اسکن در حال انجامه */}
+        {/* Scan progress */}
         {scanStatus?.isScanning && (
-          <div style={{
-            backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
-            border: `1px solid ${isDarkMode ? '#475569' : '#e5e7eb'}`,
-            borderRadius: '12px',
-            padding: '24px',
-            margin: '16px 0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', direction: 'rtl' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ 
-                  animation: 'spin 1s linear infinite',
-                  color: '#06b6d4',
-                  fontSize: '24px'
-                }}>
-                  🔄
+          <section className="tech-panel tech-panel-strong p-6 space-y-5">
+            <div className="flex items-center justify-between gap-4 flex-wrap" dir="rtl">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full flex items-center justify-center tech-icon animate-spin">
+                  <RefreshCw size={18} />
                 </div>
                 <div>
-                  <h3 style={{ 
-                    fontWeight: '600', 
-                    fontSize: '18px', 
-                    marginBottom: '4px',
-                    color: isDarkMode ? '#ffffff' : '#111827'
-                  }}>
-                    اسکن در حال انجام
-                  </h3>
-                  <p style={{ 
-                    fontSize: '14px',
-                    color: isDarkMode ? '#9ca3af' : '#6b7280'
-                  }}>
+                  <h3 className="text-lg font-bold tech-title">اسکن در حال انجام است.</h3>
+                  <p className="text-sm tech-muted">
                     {scanStatus?.message || 'در حال تست سرورها...'}
                   </p>
                 </div>
               </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ 
-                  fontSize: '24px', 
-                  fontWeight: 'bold', 
-                  color: '#06b6d4',
-                  marginBottom: '4px'
-                }}>
+              <div className="text-left">
+                <div className="text-3xl font-bold" style={{ color: 'var(--accent)' }}>
                   {scanStatus?.progress || 0}%
                 </div>
-                <div style={{ 
-                  fontSize: '14px',
-                  color: isDarkMode ? '#9ca3af' : '#6b7280'
-                }}>
+                <div className="text-sm tech-dim">
                   {scanStatus?.tested || 0}/{scanStatus?.total || 0}
                 </div>
               </div>
             </div>
-            
-            {/* نوار پیشرفت */}
-            <div style={{
-              height: '8px',
-              backgroundColor: isDarkMode ? '#374151' : '#e5e7eb',
-              borderRadius: '4px',
-              overflow: 'hidden'
-            }}>
-              <div
-                style={{
-                  height: '100%',
-                  background: 'linear-gradient(to right, #06b6d4, #3b82f6)',
-                  width: `${(scanStatus?.progress ?? Math.round(((scanStatus?.tested || 0) / (scanStatus?.total || 1)) * 100))}%`,
-                  transition: 'width 0.3s ease'
-                }}
-              ></div>
+            <div className="tech-scan-bar">
+              <span style={{
+                width: `${(scanStatus?.progress ?? Math.round(((scanStatus?.tested || 0) / (scanStatus?.total || 1)) * 100))}%`
+              }}></span>
             </div>
-          </div>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="tech-panel p-3">
+                <div className="text-2xl font-bold" style={{ color: 'var(--accent-2)' }}>
+                  {scanStatus?.tested || 0}
+                </div>
+                <div className="text-xs tech-dim">تست شده</div>
+              </div>
+              <div className="tech-panel p-3">
+                <div className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>
+                  {scanStatus?.active || 0}
+                </div>
+                <div className="text-xs tech-dim">فعال</div>
+              </div>
+              <div className="tech-panel p-3">
+                <div className="text-2xl font-bold" style={{ color: 'var(--accent-3)' }}>
+                  {scanStatus?.total || 0}
+                </div>
+                <div className="text-xs tech-dim">کل</div>
+              </div>
+            </div>
+          </section>
         )}
 
 
         
-        {/* اطلاعات اسکن - فقط وقتی اسکن تمام شده */}
+        {/* Scan info */}
         {!scanStatus?.isScanning && nextScanCountdown > 0 && (
-          <section className={`rounded-xl p-4 border ${
-            isDarkMode 
-              ? 'bg-slate-800 border-slate-700' 
-              : 'bg-white border-gray-200'
-          }`}>
+          <section className="tech-panel p-5 space-y-3">
             <div className="flex items-center justify-between text-right" dir="rtl">
               <div className="flex items-center gap-3">
-                <Clock className="text-cyan-500" size={20} />
+                <Clock size={20} style={{ color: 'var(--accent-2)' }} />
                 <div>
-                  <span className={`font-medium block ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    اسکن خودکار هر ساعت
-                  </span>
+                  <span className="font-medium block">اسکن بعدی در راه است</span>
                   {scanStatus?.lastScanTime && (
-                    <span className={`text-sm ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
-                      آخرین اسکن: {new Date(scanStatus.lastScanTime).toLocaleString('fa-IR')}
+                    <span className="text-sm tech-muted">آخرین اسکن: {new Date(scanStatus.lastScanTime).toLocaleString('fa-IR')}
                     </span>
                   )}
                 </div>
               </div>
               
-              {/* شمارش معکوس */}
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                isDarkMode 
-                  ? 'bg-cyan-500/10 text-cyan-400' 
-                  : 'bg-cyan-50 text-cyan-600'
-              }`}>
-                <span>اسکن بعدی:</span>
+              {/* Countdown */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
+                style={{
+                  background: 'rgba(45, 251, 209, 0.12)',
+                  color: 'var(--accent)',
+                  border: '1px solid rgba(45, 251, 209, 0.24)'
+                }}>
+                <span>زمان تا اسکن بعدی:</span>
                 <span className="font-mono font-bold">{formatCountdown(nextScanCountdown)}</span>
               </div>
             </div>
             
-            <p className={`text-sm mt-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              سرورها به صورت خودکار اسکن و تست می‌شوند. حداکثر 150 سرور برتر نمایش داده می‌شود.
-            </p>
+            <p className="text-sm mt-3 tech-muted">اسکن بعدی به صورت خودکار انجام می شود و حداکثر 150 سرور نمایش داده خواهد شد.</p>
           </section>
         )}
 
-        {/* کانال تلگرام */}
-        <section className={`rounded-xl p-6 border ${
-          isDarkMode 
-            ? 'bg-slate-800 border-slate-700' 
-            : 'bg-white border-gray-200'
-        }`}>
+        {/* Telegram */}
+        <section className="tech-panel p-6">
           <div className="text-center" dir="rtl">
-            <h3 className={`text-xl font-bold mb-3 ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              عضویت در کانال تلگرام
-            </h3>
-            <p className={`text-base mb-6 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-برای اینکه این ارائه خدمات ما به شما ادامه پیدا کنه لطفا مارا در تلگرام حمایت کنید
-            </p>
+            <h3 className="text-2xl font-bold mb-3 tech-title">عضویت در کانال تلگرام</h3>
+            <p className="text-base mb-6 tech-muted">برای دریافت بروزرسانی ها و پشتیبانی، لطفا در کانال تلگرام عضو شوید.</p>
             <a
               href="https://t.me/PIMX_PASS"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+              className="inline-flex items-center gap-3 px-6 py-3 tech-button"
             >
-              <span>📢</span>
+              <span>تلگرام</span>
               <span>عضویت در کانال</span>
             </a>
           </div>
@@ -556,93 +525,83 @@ const App = () => {
 
 
 
-        {/* آمار */}
+        {/* Stats */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`rounded-xl p-6 border ${
-            isDarkMode 
-              ? 'bg-slate-800 border-slate-700' 
-              : 'bg-white border-gray-200'
-          }`}>
+          <div className="tech-stat">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-cyan-500/10">
-                <Wifi className="text-cyan-500" size={24} />
+              <div className="p-3 rounded-xl" style={{
+                background: 'rgba(45, 251, 209, 0.12)',
+                color: 'var(--accent)',
+                border: '1px solid rgba(45, 251, 209, 0.24)'
+              }}>
+                <Wifi size={24} />
               </div>
               <div>
-                <div className="text-2xl font-bold text-cyan-500">
+                <div className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>
                   {activeCount}
                 </div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  سرور فعال
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className={`rounded-xl p-6 border ${
-            isDarkMode 
-              ? 'bg-slate-800 border-slate-700' 
-              : 'bg-white border-gray-200'
-          }`}>
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-blue-500/10">
-                <Zap className="text-blue-500" size={24} />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-blue-500">
-                  {avgLatency}ms
-                </div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  میانگین پینگ
-                </div>
+                <div className="text-sm tech-muted">سرور فعال</div>
               </div>
             </div>
           </div>
 
-          <div className={`rounded-xl p-6 border ${
-            isDarkMode 
-              ? 'bg-slate-800 border-slate-700' 
-              : 'bg-white border-gray-200'
-          }`}>
+          <div className="tech-stat">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-green-500/10">
-                <TrendingUp className="text-green-500" size={24} />
+              <div className="p-3 rounded-xl" style={{
+                background: 'rgba(91, 157, 255, 0.14)',
+                color: 'var(--accent-2)',
+                border: '1px solid rgba(91, 157, 255, 0.24)'
+              }}>
+                <Zap size={24} />
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-500">
+                <div className="text-2xl font-bold" style={{ color: 'var(--accent-2)' }}>
+                  {avgLatency}ms
+                </div>
+                <div className="text-sm tech-muted">میانگین پینگ</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="tech-stat">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl" style={{
+                background: 'rgba(245, 158, 11, 0.16)',
+                color: 'var(--accent-3)',
+                border: '1px solid rgba(245, 158, 11, 0.24)'
+              }}>
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--accent-3)' }}>
                   99%
                 </div>
-                <div className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  آپتایم
-                </div>
+                <div className="text-sm tech-muted">آپتایم</div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* دکمه‌های عملیات */}
+        {/* Actions */}
         <section className="flex justify-center">
           <button
             onClick={handleCopyAll}
-            disabled={activeCount === 0}
+            disabled={!canCopy}
             className={`flex items-center gap-3 px-6 py-3 rounded-lg font-medium transition-colors ${
               copyAllDone
                 ? 'bg-green-500 text-white'
-                : activeCount === 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-cyan-500 hover:bg-cyan-600 text-white'
+                : canCopy
+                ? 'tech-button'
+                : 'tech-button-ghost opacity-60 cursor-not-allowed'
             }`}
           >
             <Copy size={20} />
             <span>
               {copyAllDone 
                 ? `کپی شد (${activeCount} سرور)` 
-                : `کپی همه سرورها (${activeCount})`
+                : canCopy
+                ? `کپی همه سرورها (${activeCount})`
+                : 'لیستی برای کپی نیست'
               }
             </span>
           </button>
@@ -650,51 +609,43 @@ const App = () => {
 
 
 
-        {/* لیست سرورها */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className={`text-2xl font-bold ${
-              isDarkMode ? 'text-white' : 'text-gray-900'
-            }`}>
-              سرورهای فعال ({activeCount})
-            </h2>
-            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-              isDarkMode 
-                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-                : 'bg-blue-50 text-blue-600 border border-blue-200'
-            }`}>
-              حداکثر 150 سرور
+        {/* Server list */}
+        <section className="tech-active-section">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div>
+              <h2 className="text-2xl font-bold tech-title">سرورهای فعال ({activeCount})</h2>
+              {isScanning && (
+                <p className="text-sm tech-muted mt-1">نتایج در حال بروزرسانی است و به محض آماده شدن نمایش داده می شود.</p>
+              )}
             </div>
+            <div className="tech-chip chip-blue">حداکثر 150 سرور</div>
           </div>
-          
-          {activeCount === 0 ? (
-            <div className={`text-center py-16 rounded-xl border ${
-              isDarkMode 
-                ? 'bg-slate-800 border-slate-700' 
-                : 'bg-white border-gray-200'
-            }`}>
-              <Wifi className="mx-auto mb-4 text-cyan-500" size={48} />
-              <h3 className={`text-xl font-semibold mb-2 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                در حال جستجوی سرورها
+          {displayServers.length === 0 ? (
+            <div className="text-center py-16 tech-list-empty">
+              <Wifi className="mx-auto mb-4" size={48} style={{ color: 'var(--accent)' }} />
+              <h3 className="text-xl font-semibold mb-2 tech-title">
+                {isScanning ? 'در حال بروزرسانی لیست' : 'سرور فعالی پیدا نشد'}
               </h3>
-              <p className={`text-base ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>
-                لطفاً چند دقیقه صبر کنید تا سرورهای فعال پیدا شوند
+              <p className="text-base tech-muted">
+                {isScanning
+                  ? 'به محض آماده شدن، سرورهای فعال نمایش داده می شوند.'
+                  : 'لطفا چند دقیقه دیگر دوباره تلاش کنید یا منتظر اسکن بعدی بمانید.'
+                }
               </p>
             </div>
           ) : (
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {servers
+              {displayServers
                 .sort((a, b) => (a.latency || 999) - (b.latency || 999))
                 .map((server) => (
                   <ServerCard
                     key={server.id}
                     server={server}
                     onDislike={handleDislike}
+                    onUndislike={handleUndislike}
                     isDarkMode={isDarkMode}
+                    displayName={getDisplayName(server)}
+                    displayConfig={sanitizeConfigString(server.originalString || server.config_string)}
                   />
                 ))}
             </div>
@@ -702,9 +653,9 @@ const App = () => {
         </section>
       </main>
 
-      {/* راهنما */}
+      {/* Help */}
       {showHelpModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -712,156 +663,68 @@ const App = () => {
             }
           }}
         >
-          <div className={`relative w-full max-w-2xl rounded-xl border max-h-[90vh] flex flex-col overflow-hidden ${
-            isDarkMode 
-              ? 'bg-slate-800 border-slate-700' 
-              : 'bg-white border-gray-200'
-          }`}>
-            {/* Header */}
-            <div className={`flex items-center justify-between p-6 border-b ${
-              isDarkMode ? 'border-slate-700' : 'border-gray-200'
-            }`}>
+          <div className="relative w-full max-w-2xl rounded-xl max-h-[90vh] flex flex-col overflow-hidden tech-panel">
+            <div
+              className="flex items-center justify-between p-6"
+              style={{ borderBottom: '1px solid var(--border)' }}
+            >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/10">
-                  <Shield className="text-cyan-500" size={20} />
+                <div className="p-2 rounded-lg tech-icon">
+                  <Shield size={20} />
                 </div>
-                <h2 className={`text-xl font-bold ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  راهنمای PIMXPASS
-                </h2>
+                <h2 className="text-xl font-bold tech-title">راهنمای PIMXPASS</h2>
               </div>
               <button
                 onClick={() => setShowHelpModal(false)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'hover:bg-slate-700 text-gray-400 hover:text-white' 
-                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-                }`}
+                className="p-2 rounded-lg tech-button-ghost"
+                title="بستن"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* محتوا */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6" dir="rtl">
-              {/* مقدمه */}
-              <div className={`rounded-lg p-4 ${
-                isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-              }`}>
-                <h3 className={`text-lg font-semibold mb-3 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
-                  PIMXPASS چیست؟
-                </h3>
-                <p className={`text-sm leading-relaxed ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  PIMXPASS یک سیستم خودکار برای یافتن و تست سرورهای V2Ray فعال است. این سیستم به صورت مداوم سرورها را اسکن کرده و بهترین‌ها را برای شما فراهم می‌کند.
+              <div className="tech-panel p-4">
+                <h3 className="text-lg font-semibold mb-3 tech-title">PIMXPASS چیست؟</h3>
+                <p className="text-sm tech-muted leading-relaxed">
+                  PIMXPASS وضعیت سرورها را به صورت خودکار بررسی می کند و بهترین گزینه ها را نمایش می دهد.
+                  در این صفحه می توانید روند اسکن و کیفیت سرورها را مشاهده کنید.
                 </p>
               </div>
 
-              {/* نحوه کار */}
               <div>
-                <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  نحوه کار سیستم
-                </h3>
-                <div className="space-y-4">
-                  <div className={`flex gap-4 p-4 rounded-lg ${
-                    isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-                  }`}>
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center text-sm font-bold">
-                      1
-                    </div>
+                <h3 className="text-lg font-semibold mb-4 tech-title">مراحل استفاده</h3>
+                <div className="space-y-3">
+                  <div className="flex gap-3 tech-panel p-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'rgba(45, 251, 209, 0.15)', color: 'var(--accent)' }}>1</div>
                     <div>
-                      <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>اسکن خودکار</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        سیستم هر ساعت هزاران سرور V2Ray را جمع‌آوری و تست می‌کند
-                      </p>
+                      <p className="font-medium mb-1">کپی کردن سرور</p>
+                      <p className="text-sm tech-muted">یکی از سرورها را کپی کنید یا کپی همه را بزنید.</p>
                     </div>
                   </div>
-                  
-                  <div className={`flex gap-4 p-4 rounded-lg ${
-                    isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-                  }`}>
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-                      2
-                    </div>
+                  <div className="flex gap-3 tech-panel p-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'rgba(91, 157, 255, 0.18)', color: 'var(--accent-2)' }}>2</div>
                     <div>
-                      <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>تست کیفیت</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        هر سرور از نظر سرعت و پینگ تست شده و فقط سرورهای فعال نمایش داده می‌شوند
-                      </p>
-                      <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        ممکن است بعضی از سرورها غیر فعال باشند اما بیش از 70 درصد سرورها فعال هستند
-                      </p>
+                      <p className="font-medium mb-1">وارد کردن در اپ</p>
+                      <p className="text-sm tech-muted">لینک را در برنامه های V2Ray یا Clash وارد کنید.</p>
                     </div>
                   </div>
-
-                  <div className={`flex gap-4 p-4 rounded-lg ${
-                    isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-                  }`}>
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
-                      3
-                    </div>
+                  <div className="flex gap-3 tech-panel p-4">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'rgba(245, 158, 11, 0.18)', color: 'var(--accent-3)' }}>3</div>
                     <div>
-                      <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>مرتب‌سازی</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        سرورها بر اساس کیفیت مرتب شده و حداکثر 150 سرور برتر نمایش داده می‌شوند
-                      </p>
+                      <p className="font-medium mb-1">تست و انتخاب</p>
+                      <p className="text-sm tech-muted">سریع ترین سرور را انتخاب و استفاده کنید.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* نحوه استفاده */}
-              <div>
-                <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  نحوه استفاده
-                </h3>
-                <div className="space-y-4">
-                  <div className={`p-4 rounded-lg ${
-                    isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-                  }`}>
-                    <p className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>1. کپی کردن سرور</p>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      روی دکمه کپی هر سرور کلیک کنید یا از دکمه "کپی همه" استفاده کنید
-                    </p>
-                  </div>
-
-                  <div className={`p-4 rounded-lg ${
-                    isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-                  }`}>
-                    <p className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>2. وارد کردن در اپلیکیشن</p>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      سرور کپی شده را در V2RayNG، Clash یا سایر کلاینت‌ها وارد کنید
-                    </p>
-                  </div>
-
-                  <div className={`p-4 rounded-lg ${
-                    isDarkMode ? 'bg-slate-700' : 'bg-gray-50'
-                  }`}>
-                    <p className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>3. تست و استفاده</p>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      سرور را تست کنید و در صورت عدم کارکرد، سرور دیگری امتحان کنید
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* نکات مهم */}
-              <div className={`rounded-lg p-4 ${
-                isDarkMode ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50 border border-yellow-200'
-              }`}>
-                <h3 className={`text-lg font-semibold mb-3 ${
-                  isDarkMode ? 'text-yellow-400' : 'text-yellow-800'
-                }`}>
-                  نکات مهم
-                </h3>
-                <ul className={`space-y-2 text-sm ${isDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
-                  <li>• این سرویس کاملاً رایگان و بدون تبلیغات است</li>
-                  <li>• سرورها از منابع عمومی جمع‌آوری شده و ممکن است بعضی از سرورها غیرفعال باشند</li>
-                  <li>• برای بهترین تجربه، چندین سرور را تست کنید</li>
+              <div className="tech-panel p-4">
+                <h3 className="text-lg font-semibold mb-3 tech-title">نکات مهم</h3>
+                <ul className="space-y-2 text-sm tech-muted">
+                  <li>هنگام اسکن، نتایج پس از پایان نمایش داده می شود.</li>
+                  <li>هر چند دقیقه یکبار صفحه را تازه کنید.</li>
+                  <li>در صورت خطا، اتصال اینترنت و آدرس API را بررسی کنید.</li>
                 </ul>
               </div>
             </div>
@@ -873,3 +736,17 @@ const App = () => {
 };
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

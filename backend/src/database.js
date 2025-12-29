@@ -78,26 +78,47 @@ export const initDatabase = async () => {
             total_active INTEGER DEFAULT 0,
             total_selected INTEGER DEFAULT 0,
             total_dislikes INTEGER DEFAULT 0,
+            dislikes_since_scan INTEGER DEFAULT 0,
             last_scan DATETIME,
             scan_completed_at DATETIME,
             next_scan_at DATETIME,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         `);
+
+        db.run(`
+          CREATE TABLE IF NOT EXISTS server_dislikes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            server_id INTEGER NOT NULL,
+            user_key TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(server_id, user_key),
+            FOREIGN KEY (server_id) REFERENCES servers (id) ON DELETE CASCADE
+          )
+        `);
+
+        db.run(
+          'ALTER TABLE stats ADD COLUMN dislikes_since_scan INTEGER DEFAULT 0',
+          [],
+          () => {}
+        );
         
         // اضافه کردن منابع پیش‌فرض
         const defaultSources = [
-  "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/refs/heads/main/configs/us/all.txt",
-  "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/refs/heads/main/configs/ua/all.txt",
-  "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no1.txt",
-  "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no4.txt",
-  "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no3.txt",
-  "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no6.txt",
-  "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no8.txt",
-  "https://raw.githubusercontent.com/Arianlavi/RebeldevConfig/refs/heads/main/RebelLink/vless_subscriptions.txt",
-  "https://raw.githubusercontent.com/Arianlavi/RebeldevConfig/refs/heads/main/RebelLink/trojan_subscriptions.txt",
-  "https://raw.githubusercontent.com/MrAbolfazlNorouzi/iran-configs/refs/heads/main/configs/working-configs.txt",
-
+          "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/refs/heads/main/configs/us/all.txt",
+          "https://raw.githubusercontent.com/nyeinkokoaung404/V2ray-Configs/refs/heads/main/Sub2.txt",
+          "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no4.txt",
+          "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no3.txt",
+          "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no8.txt",
+          "https://raw.githubusercontent.com/Arianlavi/RebeldevConfig/refs/heads/main/RebelLink/vless_subscriptions.txt",
+          "https://raw.githubusercontent.com/Arianlavi/RebeldevConfig/refs/heads/main/RebelLink/trojan_subscriptions.txt",
+          "https://raw.githubusercontent.com/MrAbolfazlNorouzi/iran-configs/refs/heads/main/configs/working-configs.txt",
+          "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no1.txt",
+          "https://raw.githubusercontent.com/V2RAYCONFIGSPOOL/V2RAY_SUB/refs/heads/main/v2ray_configs_no6.txt",
+          "https://raw.githubusercontent.com/barry-far/V2ray-Config/refs/heads/main/Sub25.txt",
+          "https://raw.githubusercontent.com/Danialsamadi/v2go/refs/heads/main/Sub21.txt",
+          "https://raw.githubusercontent.com/nyeinkokoaung404/V2ray-Configs/refs/heads/main/Sub1.txt",
+          "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/refs/heads/main/configs/ua/all.txt",
 
         ];
         

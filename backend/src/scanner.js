@@ -20,8 +20,10 @@ const updateScanStatus = (updates) => {
 };
 
 const SERVERS_TO_TEST = 1000; // تعداد سرورهایی که باید تست بشن
+const EXTRA_SERVERS_STEP = 500; // تعداد سرور اضافه در صورت کمبود
+const MIN_ACTIVE_SERVERS = 90; // حداقل سرور فعال مورد نیاز
 const MAX_SELECTED_SERVERS = 150; // حداکثر تعداد سرورهای نمایش داده شده
-const MIN_SELECTED_SERVERS = 100; // حداقل تعداد سرورهای نمایش داده شده
+const MIN_SELECTED_SERVERS = 90; // حداقل تعداد سرورهای نمایش داده شده
 
 export const scanServers = async () => {
   const db = getDatabase();
@@ -34,8 +36,13 @@ export const scanServers = async () => {
     active: 0,
     message: 'شروع اسکن...'
   });
-  
   try {
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE stats SET dislikes_since_scan = 0 WHERE id = 1', (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
     // دریافت منابع فعال
     const sources = await new Promise((resolve, reject) => {
       db.all('SELECT * FROM sources WHERE active = 1', (err, rows) => {
@@ -109,84 +116,101 @@ export const scanServers = async () => {
     
     console.log(`🔄 ${uniqueConfigs.length} کانفیگ منحصر به فرد برای تست`);
     
-    updateScanStatus({
-      total: serversNeeded,
-      message: `در حال تست ${serversNeeded} سرور...`
-    });
-    
+        
     // تست سرورها
     const testedServers = [];
     let processedCount = 0;
     let activeCount = 0;
-    
-    await testServersBatch(
-      uniqueConfigs.slice(0, serversNeeded),
-      async (testedServer) => {
-        testedServers.push(testedServer);
-        processedCount++;
-        
-        if (testedServer.status === 'active') {
-          activeCount++;
-          
-          // ذخیره فوری سرور فعال در دیتابیس
-          try {
-            await new Promise((resolve, reject) => {
-              db.run(`
-                INSERT OR REPLACE INTO servers (
-                  config_string, protocol, transport, tls, name, address, port, host, path, country,
-                  latency, status, operators, packet_loss, speed, quality_score, reachable, scanned, source_id,
-                  is_selected, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-              `, [
-                testedServer.originalString,
-                testedServer.protocol,
-                testedServer.transport || 'tcp',
-                testedServer.tls || '',
-                testedServer.ps || 'بدون نام',
-                testedServer.add,
-                testedServer.port,
-                testedServer.host || testedServer.add,
-                testedServer.path || '/',
-                testedServer.country || 'نامشخص',
-                testedServer.latency || 999,
-                testedServer.status,
-                JSON.stringify(testedServer.operators || {}),
-                testedServer.packetLoss || 0,
-                testedServer.speed || 0,
-                85, // quality score ثابت برای سرورهای فعال
-                testedServer.reachable ? 1 : 0,
-                testedServer.scanned ? 1 : 0,
-                testedServer.source_id,
-                1 // is_selected = true
-              ], (err) => {
-                if (err) reject(err);
-                else resolve();
+    const maxAvailable = uniqueConfigs.length;
+    let totalToTest = Math.min(serversNeeded, maxAvailable);
+    let cursor = 0;
+
+    updateScanStatus({
+      total: totalToTest,
+      message: `در حال تست ${totalToTest} سرور...`
+    });
+
+    while (cursor < totalToTest) {
+      const batchConfigs = uniqueConfigs.slice(cursor, totalToTest);
+
+      await testServersBatch(
+        batchConfigs,
+        async (testedServer) => {
+          testedServers.push(testedServer);
+          processedCount++;
+
+          if (testedServer.status === 'active') {
+            activeCount++;
+
+            try {
+              await new Promise((resolve, reject) => {
+                db.run(`
+                  INSERT OR REPLACE INTO servers (
+                    config_string, protocol, transport, tls, name, address, port, host, path, country,
+                    latency, status, operators, packet_loss, speed, quality_score, reachable, scanned, source_id,
+                    is_selected, updated_at
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                `, [
+                  testedServer.originalString,
+                  testedServer.protocol,
+                  testedServer.transport || 'tcp',
+                  testedServer.tls || '',
+                  testedServer.ps || 'سرور ناشناخته',
+                  testedServer.add,
+                  testedServer.port,
+                  testedServer.host || testedServer.add,
+                  testedServer.path || '/',
+                  testedServer.country || 'نامشخص',
+                  testedServer.latency || 999,
+                  testedServer.status,
+                  JSON.stringify(testedServer.operators || {}),
+                  testedServer.packetLoss || 0,
+                  testedServer.speed || 0,
+                  85,
+                  testedServer.reachable ? 1 : 0,
+                  testedServer.scanned ? 1 : 0,
+                  testedServer.source_id,
+                  1
+                ], (err) => {
+                  if (err) reject(err);
+                  else resolve();
+                });
               });
-            });
-          } catch (error) {
-            console.error('خطا در ذخیره فوری سرور:', error);
+            } catch (error) {
+              console.error('خطا در ذخیره سرور:', error);
+            }
           }
-        }
-        
-        // به‌روزرسانی وضعیت
-        updateScanStatus({
-          tested: processedCount,
-          active: activeCount,
-          progress: Math.round((processedCount / serversNeeded) * 100),
-          message: `${processedCount} از ${serversNeeded} سرور تست شد (${activeCount} فعال)`
-        });
-        
-        if (processedCount % 50 === 0) {
-          console.log(`⏳ ${processedCount} سرور تست شد... (${activeCount} فعال)`);
-        }
-      },
-      () => false // shouldStop function
-    );
-    
+
+          updateScanStatus({
+            tested: processedCount,
+            active: activeCount,
+            progress: Math.round((processedCount / totalToTest) * 100),
+            message: `${processedCount} از ${totalToTest} سرور تست شد (${activeCount} فعال)`
+          });
+
+          if (processedCount % 50 === 0) {
+            console.log(`⏳ ${processedCount} سرور تست شد... (${activeCount} فعال)`);
+          }
+        },
+        () => false
+      );
+
+      cursor = totalToTest;
+
+      if (activeCount >= MIN_ACTIVE_SERVERS || cursor >= maxAvailable) {
+        break;
+      }
+
+      totalToTest = Math.min(cursor + EXTRA_SERVERS_STEP, maxAvailable);
+      updateScanStatus({
+        total: totalToTest,
+        message: `در حال تست ${totalToTest} سرور...`
+      });
+    }
+
     console.log(`🧪 ${testedServers.length} سرور تست شد`);
-    
-    // ذخیره در دیتابیس
-    const activeServers = testedServers.filter(s => s.status === 'active');
+
+const activeServers = testedServers.filter(s => s.status === 'active');
     console.log(`✅ ${activeServers.length} سرور فعال پیدا شد`);
     
     // فقط سرورهای غیرفعال رو ذخیره می‌کنیم (فعال‌ها قبلاً ذخیره شدن)

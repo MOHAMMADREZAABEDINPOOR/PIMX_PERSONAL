@@ -1,18 +1,53 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ServerConfig } from '../types';
 import { Copy, Check, Zap, ThumbsDown, Shield } from 'lucide-react';
 
 interface ServerCardProps {
   server: ServerConfig;
   onDislike?: (server: ServerConfig) => void;
+  onUndislike?: (server: ServerConfig) => void;
   isDarkMode?: boolean;
+  displayName?: string;
+  displayConfig?: string;
 }
 
-export const ServerCard: React.FC<ServerCardProps> = ({ server, onDislike, isDarkMode = true }) => {
+const DISLIKES_STORAGE_KEY = 'pimxpass_dislikes';
+
+const loadDislikedIds = () => {
+  try {
+    const raw = localStorage.getItem(DISLIKES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveDislikedIds = (ids: Array<number | string>) => {
+  try {
+    localStorage.setItem(DISLIKES_STORAGE_KEY, JSON.stringify(ids));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
+export const ServerCard: React.FC<ServerCardProps> = ({
+  server,
+  onDislike,
+  onUndislike,
+  isDarkMode = true,
+  displayName,
+  displayConfig
+}) => {
   const [copied, setCopied] = useState(false);
   const [disliked, setDisliked] = useState(false);
 
-  // تابع برای کوتاه کردن اسم سرور به ۲۰ کاراکتر
+  useEffect(() => {
+    const ids = loadDislikedIds();
+    setDisliked(ids.includes(server.id));
+  }, [server.id]);
+
   const truncateServerName = (name: string, maxChars: number = 20) => {
     if (name.length <= maxChars) {
       return name;
@@ -21,93 +56,83 @@ export const ServerCard: React.FC<ServerCardProps> = ({ server, onDislike, isDar
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(server.originalString);
+    const text = displayConfig || server.originalString;
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDislike = () => {
-    setDisliked(!disliked);
+    const ids = loadDislikedIds();
+
+    if (disliked) {
+      const nextIds = ids.filter((id) => id !== server.id);
+      saveDislikedIds(nextIds);
+      setDisliked(false);
+      if (onUndislike) {
+        onUndislike(server);
+      }
+      return;
+    }
+
+    setDisliked(true);
+    if (!ids.includes(server.id)) {
+      ids.push(server.id);
+      saveDislikedIds(ids);
+    }
+
     if (onDislike) {
       onDislike(server);
     }
   };
 
-  // محاسبه رنگ بر اساس پینگ
-  const getPingColor = (latency: number) => {
-    if (latency < 100) return 'text-green-400';
-    if (latency < 200) return 'text-yellow-400';
-    return 'text-red-400';
-  };
-
   const getPingBadgeColor = (latency: number) => {
-    if (latency < 100) return 'bg-green-500/20 text-green-400 border-green-500/30';
-    if (latency < 200) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    return 'bg-red-500/20 text-red-400 border-red-500/30';
+    if (latency < 100) return 'pill-success';
+    if (latency < 200) return 'pill-warning';
+    return 'pill-danger';
   };
 
   return (
-    <div className={`rounded-xl p-6 border transition-all duration-200 hover:shadow-lg ${
-      isDarkMode 
-        ? 'bg-slate-800 border-slate-700 hover:border-slate-600' 
-        : 'bg-white border-gray-200 hover:border-gray-300'
-    }`}>
-
-
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
+    <div className="tech-card">
+      <div className="flex justify-between items-start mb-4 gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`tech-chip ${
             server.protocol === 'vmess' 
-              ? 'bg-purple-500/10 text-purple-500' 
-              : 'bg-blue-500/10 text-blue-500'
+              ? 'chip-amber' 
+              : 'chip-blue'
           }`}>
             {server.protocol?.toUpperCase() || 'VLESS'}
           </span>
-          <span className="px-3 py-1 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-500">
-            TCP
+          <span className="tech-chip chip-accent">
+            {server.transport?.toUpperCase() || 'TCP'}
           </span>
         </div>
-        
-        {/* Ping Badge */}
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-mono ${
-          server.latency < 100 
-            ? 'bg-green-500/10 text-green-500' 
-            : server.latency < 200 
-              ? 'bg-yellow-500/10 text-yellow-500' 
-              : 'bg-red-500/10 text-red-500'
-        }`}>
+        <div className={`flex items-center gap-2 tech-pill ${getPingBadgeColor(server.latency || 999)}`}>
           <Zap size={16} />
           <span className="font-bold">{server.latency || 0}ms</span>
         </div>
       </div>
 
-      {/* Server Info */}
       <div className="mb-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-cyan-500/10">
-            <Shield className="text-cyan-500" size={20} />
+          <div className="p-2 rounded-lg tech-icon">
+            <Shield size={20} />
           </div>
-          <h3 className={`font-semibold text-lg ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`} title={server.ps || 'Server'}>
-            {truncateServerName(server.ps || 'Server')}
+          <h3 className="font-semibold text-lg tech-title" title={displayName || server.ps || 'Server'}>
+            {truncateServerName(displayName || server.ps || 'Server')}
           </h3>
         </div>
-        
-        <div className={`text-sm font-mono mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+
+        <div className="text-sm font-mono mb-2 tech-muted">
           {server.add}:{server.port}
         </div>
-        <div className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-          {server.country || 'نامشخص'} • {server.security || 'auto'}
+        <div className="text-sm tech-dim">
+          {server.country || 'نامشخص'} - {server.security || 'auto'}
         </div>
       </div>
 
-      {/* اپراتورهای سازگار */}
       <div className="mb-6">
-        <h4 className={`text-sm font-medium mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-          اپراتورهای سازگار
-        </h4>
+        <h4 className="text-sm font-medium mb-3 tech-muted">سازگاری اپراتورها</h4>
         <div className="grid grid-cols-2 gap-2">
           {[
             { key: 'mci', name: 'همراه اول' },
@@ -116,22 +141,18 @@ export const ServerCard: React.FC<ServerCardProps> = ({ server, onDislike, isDar
             { key: 'shatel', name: 'شاتل' },
             { key: 'mokhaberat', name: 'مخابرات' }
           ].map((operator) => {
-            // استفاده از داده واقعی اپراتورها به جای تصادفی
             const isSupported = server.operators?.[operator.key as keyof typeof server.operators] || false;
             return (
               <div
                 key={operator.key}
-                className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs font-medium ${
-                  isSupported
-                    ? isDarkMode 
-                      ? 'bg-green-500/10 text-green-400' 
-                      : 'bg-green-50 text-green-600'
-                    : isDarkMode 
-                      ? 'bg-red-500/10 text-red-400' 
-                      : 'bg-red-50 text-red-600'
-                }`}
+                className="flex items-center gap-2 px-2 py-2 rounded-lg text-xs font-medium border"
+                style={{
+                  background: isSupported ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                  color: isSupported ? '#22c55e' : 'var(--danger)',
+                  borderColor: isSupported ? 'rgba(34, 197, 94, 0.24)' : 'rgba(244, 63, 94, 0.24)'
+                }}
               >
-                <span>{isSupported ? '✓' : '✗'}</span>
+                <span>{isSupported ? '✓' : '✕'}</span>
                 <span className="truncate">{operator.name}</span>
               </div>
             );
@@ -139,33 +160,29 @@ export const ServerCard: React.FC<ServerCardProps> = ({ server, onDislike, isDar
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 server-actions">
         <button 
           onClick={handleCopy}
           className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium text-sm transition-colors ${
             copied
               ? 'bg-green-500 text-white'
-              : 'bg-cyan-500 hover:bg-cyan-600 text-white'
+              : 'tech-button'
           }`}
         >
           {copied ? <Check size={18} /> : <Copy size={18} />}
-          <span>{copied ? 'کپی شد' : 'کپی کانفیگ'}</span>
+          <span>{copied ? 'کپی شد' : 'کپی سرور'}</span>
         </button>
-        
+
         <button
           onClick={handleDislike}
           className={`px-4 py-3 flex items-center justify-center gap-2 rounded-lg font-medium text-sm transition-colors ${
-            disliked
-              ? 'bg-red-500 text-white'
-              : isDarkMode
-                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300'
-                : 'bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700'
+            disliked ? '' : 'tech-button-ghost'
           }`}
-          title="گزارش مشکل"
+          style={disliked ? { background: 'var(--danger)', color: '#fff' } : { color: 'var(--danger)', borderColor: 'rgba(244, 63, 94, 0.4)' }}
+          title="دیسلایک"
         >
           <ThumbsDown size={16} />
-          <span>{disliked ? 'گزارش شد' : 'گزارش'}</span>
+          <span>{disliked ? 'دیسلایک شد' : 'دیسلایک'}</span>
         </button>
       </div>
     </div>

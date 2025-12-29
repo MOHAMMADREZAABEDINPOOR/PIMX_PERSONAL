@@ -249,6 +249,38 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
   }
+
+  .tech-panel,
+  .tech-card,
+  .tech-stat,
+  .tech-active-section {
+    padding: 0.75rem !important;
+  }
+
+  .tech-card {
+    border-radius: 14px;
+  }
+
+  .tech-chip {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .tech-button,
+  .tech-button-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .server-actions {
+    flex-direction: column;
+  }
+
+  .tech-header .max-w-7xl {
+    height: auto;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }
 
 /* تنظیمات برای گوشی‌های landscape */

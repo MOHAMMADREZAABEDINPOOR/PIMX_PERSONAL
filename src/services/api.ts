@@ -2,13 +2,13 @@ import { ServerConfig } from '../../types.ts';
 
 // Use environment variable for API URL, fallback to localhost for development
 const API_BASE_URL = import.meta.env.VITE_API_URL || (
-  import.meta.env.MODE === 'production' 
-    ? 'https://pimx-backend.onrender.com/api' 
+  import.meta.env.MODE === 'production'
+    ? 'https://pimx-backend.onrender.com/api'
     : 'http://localhost:3001/api'
 );
 
 export const apiService = {
-  // دریافت سرورهای فعال
+  // Active servers
   async getActiveServers(): Promise<ServerConfig[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/servers`);
@@ -16,8 +16,8 @@ export const apiService = {
         throw new Error('خطا در دریافت سرورها');
       }
       const data = await response.json();
-      
-      // تبدیل داده‌های دیتابیس به فرمت فرانت‌اند
+
+      // Map to frontend shape
       return data.map((server: any) => ({
         id: server.id,
         config_string: server.config_string,
@@ -54,7 +54,7 @@ export const apiService = {
     }
   },
 
-  // دریافت آمار
+  // Stats
   async getStats() {
     try {
       const response = await fetch(`${API_BASE_URL}/stats`);
@@ -68,7 +68,7 @@ export const apiService = {
     }
   },
 
-  // ثبت دیسلایک
+  // Dislike
   async dislikeServer(serverId: string) {
     try {
       const response = await fetch(`${API_BASE_URL}/servers/${serverId}/dislike`, {
@@ -77,11 +77,11 @@ export const apiService = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('خطا در ثبت دیسلایک');
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('خطا در ثبت دیسلایک:', error);
@@ -89,7 +89,28 @@ export const apiService = {
     }
   },
 
-  // دریافت وضعیت اسکن
+  // Undislike
+  async undislikeServer(serverId: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/servers/${serverId}/undislike`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('خطا در حذف دیسلایک');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('خطا در حذف دیسلایک:', error);
+      throw error;
+    }
+  },
+
+  // Scan status
   async getScanStatus() {
     try {
       const response = await fetch(`${API_BASE_URL}/scan-status`);
@@ -105,10 +126,8 @@ export const apiService = {
         total: 0,
         tested: 0,
         active: 0,
-        message: 'نامشخص'
+        message: 'در حال بروزرسانی'
       };
     }
   },
-
-
 };
