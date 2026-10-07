@@ -1,27 +1,41 @@
 <div align="center">
 
-<img src="assets/readme/hero.gif" width="1200" alt="PIMX PERSONAL — rotating 3D geometry" />
+<img src="assets/readme/hero.gif" width="1200" alt="PIMX PERSONAL: a scanning radar with discovered server beacons" />
 
 **[English](README.md) · [فارسی](README.fa.md)**
 
-<img src="assets/readme/identity.svg" width="1200" alt="web / English and Persian documentation" />
-
 </div>
 
-# PIMX PERSONAL
+# 📡 PIMX PERSONAL
 
 A React server-discovery dashboard with a Node backend for collecting, testing and listing proxy/server configurations. The source is a network tool despite the repository name.
 
 [GitHub](https://github.com/MOHAMMADREZAABEDINPOOR/PIMX_PERSONAL) · [PIMX / Profile](https://github.com/MOHAMMADREZAABEDINPOOR) · [Static artwork](assets/readme/hero.png)
 
-## Features
+| At a glance | Details |
+|:---|:---|
+| 📡 Experience | Web application / browser experience |
+| 🧰 Built with | `React` · `Vite` · `TypeScript` |
+| 🌐 Documentation | [English](README.md) · [فارسی](README.fa.md) |
 
-- Server cards with copy controls and availability information
-- Backend collection, parsing and batch testing
-- Theme controls and Persian usage guidance
-- Node backend plus optional Cloudflare adapters
+[✨ Features](#features) · [🚀 Getting started](#getting-started) · [⚙️ Configuration](#configuration) · [🌍 Deployment](#deployment)
 
-## Stack
+---
+
+<a id="features"></a>
+
+## ✨ Features
+
+| Area | Included capability |
+|:---|:---|
+| 🔌 Integration | Server cards with copy controls and availability information |
+| 🔌 Integration | Backend collection, parsing and batch testing |
+| 🌐 Experience | Theme controls and Persian usage guidance |
+| 🔌 Integration | Node backend plus optional Cloudflare adapters |
+
+<a id="stack"></a>
+
+## 🧰 Stack
 
 | Tool | Version / source |
 |---|---|
@@ -29,7 +43,9 @@ A React server-discovery dashboard with a Node backend for collecting, testing a
 | Vite | `^6.2.0` |
 | TypeScript | `~5.8.2` |
 
-## Getting started
+<a id="getting-started"></a>
+
+## 🚀 Getting started
 
 Node.js 22.12+ and the package manager declared in package.json. Install dependencies from the checked-in lockfile where available.
 
@@ -44,7 +60,9 @@ npm run dev
 npm run backend
 ```
 
-## Configuration
+<a id="configuration"></a>
+
+## ⚙️ Configuration
 
 These names are found in the example configuration or source; not all are required. Check their defaults/usage in those files and supply secrets only in your local or hosting environment.
 
@@ -57,11 +75,15 @@ These names are found in the example configuration or source; not all are requir
 
 Hosting bindings: `SERVERS_KV`.
 
-## Usage
+<a id="usage"></a>
+
+## 🎯 Usage
 
 Run both the frontend and backend, refresh the scan and copy a listed configuration into a compatible client. Review the API base URL in the frontend service for your environment.
 
-## Project structure
+<a id="project-structure"></a>
+
+## 🗂️ Project structure
 
 | Path | Role |
 |---|---|
@@ -79,7 +101,16 @@ Run both the frontend and backend, refresh the scan and copy a listed configurat
 | [`vercel.json`](vercel.json) | Project entry/configuration file |
 | [`wrangler.toml`](wrangler.toml) | Project entry/configuration file |
 
-## Commands and checks
+<a id="commands-and-checks"></a>
+
+## 🧪 Commands and checks
+
+| Command | Purpose |
+|:---|:---|
+| `npm run dev` | 🧑‍💻 Development server |
+| `npm run build` | 📦 Production build |
+| `npm run preview` | 👀 Preview a build |
+| `npm run start` | ▶️ Application server |
 
 ```bash
 npm run dev
@@ -90,28 +121,46 @@ npm run start
 
 These commands are declared in package.json; the list is not a test execution report. Test commands may need a browser, service or prepared database.
 
-## Deployment
+<a id="deployment"></a>
+
+## 🌍 Deployment
 
 Deploy the build according to its architecture: server-backed projects need a Node process; static Vite frontends can host dist. Pages functions, KV or D1 require separate configuration.
 
-## Limitations
+<a id="limitations"></a>
+
+## 📌 Limitations
 
 Public configurations can become unavailable or untrusted. Test results reflect the scanner location, not guaranteed access from your device. Static hosting needs a separately hosted API.
 
-## Troubleshooting
+<a id="troubleshooting"></a>
+
+## 🛠️ Troubleshooting
 
 - Missing packages: install dependencies using the project’s package manager.
 - API/network failure: check the configured origin, provider and hosting bindings.
 - Old assets: rebuild when a build script exists, then clear the browser cache.
 
-## Contributing
+<a id="contributing"></a>
+
+## 🤝 Contributing
 
 Create a focused branch, verify the affected behavior and explain the change clearly. Keep private data, build outputs and local databases out of commits.
 
-## License
+<a id="license"></a>
+
+## 📄 License
 
 No repository-level license file is included in this snapshot. Public visibility alone does not grant reuse rights; contact the repository owner for terms.
 
 ---
 
 Part of **PIMX** · Documentation in English and Persian.
+
+---
+
+<div align="center">
+
+📡 **PIMX PERSONAL** · [English](README.md) · [فارسی](README.fa.md)
+
+</div>
